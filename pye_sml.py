@@ -623,3 +623,4 @@ def pye(*content, tab_size = 4, undo = 50, device = 0, baud = 115200):
     Editor.yank_buffer = []
 ## close
     return slot[0].content if (slot[0].fname == "") else slot[0].fname
+

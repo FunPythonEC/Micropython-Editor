@@ -68,6 +68,8 @@ KEY_UNDO      = const(0x1a)
 KEY_YANK      = const(0x18)
 KEY_ZAP       = const(0x16)
 KEY_DUP       = const(0x04)
+KEY_DUP_LINE  = const(0xfff7)
+KEY_DEL_LINE  = const(0xfff8)
 KEY_FIRST     = const(0x14)
 KEY_LAST      = const(0x02)
 KEY_REPLC     = const(0x12)
@@ -106,7 +108,7 @@ class Editor:
     "\x7f"   : KEY_BACKSPACE, ## Ctrl-? (127)
     "\x1b[3~": KEY_DELETE,
     "\x1b[Z" : KEY_BACKTAB, ## Shift Tab
-    "\x19"   : KEY_YANK, ## Ctrl-Y alias to Ctrl-X
+    "\x19"   : KEY_DEL_LINE, ## Ctrl-Y
     "\x08"   : KEY_REPLC, ## Ctrl-H
     "\x12"   : KEY_REPLC, ## Ctrl-R
     "\x11"   : KEY_QUIT, ## Ctrl-Q
@@ -122,7 +124,7 @@ class Editor:
     "\x15"   : KEY_BACKTAB, ## Ctrl-U
     "\x18"   : KEY_YANK, ## Ctrl-X
     "\x16"   : KEY_ZAP, ## Ctrl-V
-    "\x04"   : KEY_DUP, ## Ctrl-D
+    "\x04"   : KEY_DUP_LINE, ## Ctrl-D
     "\x0c"   : KEY_MARK, ## Ctrl-L
     "\x00"   : KEY_MARK, ## Ctrl-Space
     "\x14"   : KEY_FIRST, ## Ctrl-T
@@ -502,8 +504,9 @@ class Editor:
                 self.undo_zero -= 1
             self.undo.append([lnum, span, text, key, self.col])
 
-    def delete_lines(self, yank): ## copy marked lines (opt) and delete them
-        lrange = self.line_range()
+    def delete_lines(self, yank, lrange=None): ## copy marked lines (opt) and delete them
+        if lrange is None:
+            lrange = self.line_range()
         if yank:
             Editor.yank_buffer = self.content[lrange[0]:lrange[1]]
         self.undo_add(lrange[0], self.content[lrange[0]:lrange[1]], KEY_NONE, 0) ## undo inserts
@@ -767,6 +770,13 @@ class Editor:
                 self.undo_add(self.cur_line, None, KEY_NONE, -len(Editor.yank_buffer))
                 self.content[self.cur_line:self.cur_line] = Editor.yank_buffer # insert lines
                 self.total_lines += len(Editor.yank_buffer)
+        elif key == KEY_DUP_LINE: ## Duplicate actual line
+                self.undo_add(self.cur_line, None, KEY_NONE, -1)
+                self.content[self.cur_line:self.cur_line] =\
+                    self.content[self.cur_line:self.cur_line + 1] # insert line
+                self.total_lines += 1
+        elif key == KEY_DEL_LINE: ## Delete
+                self.delete_lines(False, [self.cur_line, self.cur_line + 1])
         elif key == KEY_WRITE:
             fname = self.line_edit("Save File: ", self.fname)
             if fname:
