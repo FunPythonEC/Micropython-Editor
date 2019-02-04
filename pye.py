@@ -108,7 +108,7 @@ class Editor:
     "\x7f"   : KEY_BACKSPACE, ## Ctrl-? (127)
     "\x1b[3~": KEY_DELETE,
     "\x1b[Z" : KEY_BACKTAB, ## Shift Tab
-    "\x19"   : KEY_DEL_LINE, ## Ctrl-Y
+    "\x19"   : KEY_YANK, ## Ctrl-Y
     "\x08"   : KEY_REPLC, ## Ctrl-H
     "\x12"   : KEY_REPLC, ## Ctrl-R
     "\x11"   : KEY_QUIT, ## Ctrl-Q
@@ -136,7 +136,7 @@ class Editor:
 ## other keys
     "\x1b[1;5H": KEY_FIRST, ## Ctrl-Home
     "\x1b[1;5F": KEY_LAST, ## Ctrl-End
-    "\x1b[3;5~": KEY_YANK, ## Ctrl-Del
+    "\x1b[3;5~": KEY_DEL_LINE, ## Ctrl-Del
     "\x0b"   : KEY_MATCH,## Ctrl-K
     "\x1b[M" : KEY_MOUSE,
     }
@@ -504,9 +504,7 @@ class Editor:
                 self.undo_zero -= 1
             self.undo.append([lnum, span, text, key, self.col])
 
-    def delete_lines(self, yank, lrange=None): ## copy marked lines (opt) and delete them
-        if lrange is None:
-            lrange = self.line_range()
+    def delete_lines(self, yank, lrange): ## Save lines (opt) and delete them
         if yank:
             Editor.yank_buffer = self.content[lrange[0]:lrange[1]]
         self.undo_add(lrange[0], self.content[lrange[0]:lrange[1]], KEY_NONE, 0) ## undo inserts
@@ -559,7 +557,7 @@ class Editor:
             self.col = self.skip_while(l, pos, self.word_char, 1)
         elif key == KEY_DELETE:
             if self.mark is not None:
-                self.delete_lines(False)
+                self.delete_lines(False, self.line_range())
             elif self.col < len(l):
                 self.undo_add(self.cur_line, [l], KEY_DELETE)
                 self.content[self.cur_line] = l[:self.col] + l[self.col + 1:]
@@ -572,7 +570,7 @@ class Editor:
                 self.total_lines -= 1
         elif key == KEY_BACKSPACE:
             if self.mark is not None:
-                self.delete_lines(False)
+                self.delete_lines(False, self.line_range())
             elif self.col > 0:
                 self.undo_add(self.cur_line, [l], KEY_BACKSPACE)
                 self.content[self.cur_line] = l[:self.col - 1] + l[self.col:]
@@ -757,7 +755,7 @@ class Editor:
                     self.message = "'{}' replaced {} times".format(pat, count)
         elif key == KEY_YANK:  # delete line or line(s) into buffer
             if self.mark is not None:
-                self.delete_lines(True)
+                self.delete_lines(True, self.line_range())
         elif key == KEY_DUP:  # copy line(s) into buffer
             if self.mark is not None:
                 lrange = self.line_range()
@@ -766,15 +764,16 @@ class Editor:
         elif key == KEY_ZAP: ## insert buffer
             if Editor.yank_buffer:
                 if self.mark is not None:
-                    self.delete_lines(False)
+                    self.delete_lines(False, self.line_range())
                 self.undo_add(self.cur_line, None, KEY_NONE, -len(Editor.yank_buffer))
                 self.content[self.cur_line:self.cur_line] = Editor.yank_buffer # insert lines
                 self.total_lines += len(Editor.yank_buffer)
         elif key == KEY_DUP_LINE: ## Duplicate actual line
                 self.undo_add(self.cur_line, None, KEY_NONE, -1)
                 self.content[self.cur_line:self.cur_line] =\
-                    self.content[self.cur_line:self.cur_line + 1] # insert line
+                    self.content[self.cur_line:self.cur_line + 1] ## dup line
                 self.total_lines += 1
+                self.mark = None ## clear mark, if it was set
         elif key == KEY_DEL_LINE: ## Delete
                 self.delete_lines(False, [self.cur_line, self.cur_line + 1])
         elif key == KEY_WRITE:
