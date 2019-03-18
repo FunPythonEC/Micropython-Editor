@@ -71,9 +71,9 @@ Ctrl-A              Settings. Sets the state of auto-indent, search case
                     fields (e.g. n,y,4,# ,n). An empty field leaves the respective value
                     unchanged. The default values are auto-indent: y,
                     case sensitive: n, tab-size: 4, Comment string: #, Write Tabs: n
-Ctrl-L              Mark/Unmark the current line. The mark affects Delete,
-                    Backspace, Cut lines, Copy lines, Insert lines, Tab,
-                    Backtab, Save and Replace.
+Ctrl-L              Mark/Extend/Unmark the current line. The mark affects
+                    Delete, Backspace, Cut lines, Copy lines, Insert lines,
+                    Tab, Backtab and Replace.
 Ctrl-X  Ctrl-Y      Delete the area between the mark and the current line and
                     keep it in the paste buffer. Together with the Ctrl-V this
                     implements the Cut & Paste feature. The mark is cleared.

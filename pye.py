@@ -35,7 +35,7 @@ else:
     from _io import StringIO
     from re import compile as re_compile
 
-PYE_VERSION   = " V2.29 "
+PYE_VERSION   = " V2.30 "
 
 KEY_NONE      = const(0x00)
 KEY_UP        = const(0x0b)
@@ -361,8 +361,30 @@ class Editor:
                 len(line[:pos]) - len(line[:pos].rstrip(" ")))
 
     def line_range(self):
-        return ((self.mark, self.cur_line + 1) if self.mark < self.cur_line else
-                (self.cur_line, self.mark + 1))
+        if self.mark[1] is None:
+            return (self.mark[0], self.mark[0] + 1)
+        else:
+            if self.mark[0] <= self.mark[1]:
+                return (self.mark[0], self.mark[1] + 1) 
+            else:
+                return (self.mark[1], self.mark[0] + 1)
+
+    def set_mark(self, toggle):
+        if self.mark is None:
+            self.mark = (self.cur_line, None)
+        elif (toggle and (self.mark[1] is None)) or (not toggle):
+             self.mark = (self.mark[0], self.cur_line)
+        else:
+            self.mark = None
+
+    def shift_mark(self, move_fnc):
+        if self.mark is not None:
+            lrange = self.line_range()
+            if not lrange[0] <= self.cur_line < lrange[1]:
+                self.mark = None
+            else:
+                move_fnc()
+        self.set_mark(False)
 
     def line_edit(self, prompt, default, zap=None):  ## better one: added cursor keys and backsp, delete
         push_msg = lambda msg: self.wr(msg + "\b" * len(msg)) ## Write a message and move cursor back
@@ -624,7 +646,7 @@ class Editor:
                 self.col = char[0] + self.margin
                 self.cur_line = char[1] + self.top_line
                 if char[2] in (0x22, 0x30): ## Right/Ctrl button on Mouse
-                    self.mark = self.cur_line if self.mark is None else None
+                    self.set_mark(True)
         elif key == KEY_SCRLUP: ##
             if self.top_line > 0:
                 self.top_line = max(self.top_line - 3, 0)
@@ -675,19 +697,12 @@ class Editor:
                             if i > 0: ## prev line, if any, starts at the end
                                 pos = len(self.content[i - 1]) - 1
         elif key == KEY_MARK:
-            self.mark = self.cur_line if self.mark is None else None
+            self.set_mark(True)
         elif key == KEY_SHIFT_DOWN:
-            if self.mark is None:
-                self.mark = self.cur_line
-            else:
-                self.move_down()
+            self.shift_mark(self.move_down)
         elif key == KEY_SHIFT_UP:
-            if self.mark is None:
-                self.mark = self.cur_line
-            else:
-                self.move_up()
+            self.shift_mark(self.move_up)
         elif key == KEY_ENTER:
-            self.mark = None
             self.undo_add(self.cur_line, [l], KEY_NONE, 2)
             self.content[self.cur_line] = l[:self.col]
             ni = 0

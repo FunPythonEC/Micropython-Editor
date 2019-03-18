@@ -25,7 +25,7 @@ shows most of the commands. Commands marked with (opt) may not be supported in
 |:---|:---|
 |Up Down Left Right| Cursor movement by one line or char|
 |Ctrl-Left Ctrl-Right| Move the cursor by one word left or right|
-|Shift-Up Shift-Down| Mark the current line or extend the mark
+|Shift-Up Shift-Down| Mark the current line or extend the mark|
 |PgUp & PgDd|Page up/down|
 |Home|Toggle the position between the start-of-code and the start of line|
 |End|Toggle the position between the end-of-the-code and end-of-line|
@@ -45,7 +45,7 @@ shows most of the commands. Commands marked with (opt) may not be supported in
 |Ctrl-T|Go to the first line (opt)|
 |Ctrl-B|Go to the last line (opt)|
 |Ctrl-K|Goto the bracket matching the one under the cursor (opt)|
-|Ctrl-L or Ctrl-Space|Mark/Unmark the current line. The mark can then be extended by moving the cursor|
+|Ctrl-L or Ctrl-Space|Mark/Extend/Unmark the a block of line. The mark can then be extended by moving the cursor to the target line and pushing Ctrl-L again. Pushing Ctrl-L a third time unmarks the block|
 |Ctrl-X or Ctrl-Y|Cut the marked lines
 |Ctrl-C or Ctrl-D|Copy the marked lines
 |Ctrl-V|Insert the copied/cut lines. In the line edit mode paste the item under the cursor of the active window. |
@@ -422,3 +422,5 @@ the list of files in the current dir
 **2.28** Add word left & right with ctrl-left and ctrl-right
 
 **2.29** Add shift-up and shift-down for setting/extending the marke area
+
+**2.30** Change the method for marking a range of line for block operation
