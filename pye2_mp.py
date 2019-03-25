@@ -281,7 +281,13 @@ class Editor:
                 len(line[:pos]) - len(line[:pos].rstrip(" ")))
     def line_range(self):
         if self.mark[1] is None:
-            return (self.mark[0], self.cur_line + 1 if self.mark[2] else self.mark[0] + 1)
+            if self.mark[2]:
+                if self.mark[0] <= self.cur_line:
+                    return (self.mark[0], self.cur_line + 1)
+                else:
+                    return (self.cur_line, self.mark[0] + 1)
+            else:
+                return (self.mark[0], self.mark[0] + 1)
         else:
             if self.mark[0] <= self.mark[1]:
                 return (self.mark[0], self.mark[1] + 1)
@@ -291,7 +297,7 @@ class Editor:
         if self.mark is None:
             self.mark = (self.cur_line, None, toggle)
         elif (toggle and (self.mark[1] is None)) or (not toggle):
-             self.mark = (self.mark[0], self.cur_line, toggle)
+             self.mark = (self.mark[0], self.cur_line, self.mark[2])
         else:
             self.mark = None
     def shift_mark(self, move_fnc):
